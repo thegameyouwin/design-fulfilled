@@ -49,9 +49,9 @@ const DonationForm = ({ onSubmit }: DonationFormProps) => {
     tabInactive: isMpesa 
       ? "bg-muted text-muted-foreground hover:bg-muted/80" 
       : "bg-purple-50 text-[#9910FB] hover:bg-purple-100",
-    frequencyActive: isMpesa 
-      ? "bg-primary text-primary-foreground" 
-      : "bg-[#9910FB] text-white",
+    // Updated frequency toggle - dark/black background for selected, white for unselected
+    frequencyActive: "bg-black text-white",
+    frequencyInactive: "bg-white text-black",
     buttonGradient: isMpesa 
       ? "btn-donate-gradient" 
       : "bg-gradient-to-r from-[#9910FB] to-[#7A0BDA] hover:from-[#7A0BDA] hover:to-[#9910FB]",
@@ -142,7 +142,7 @@ const DonationForm = ({ onSubmit }: DonationFormProps) => {
                 className={`flex-1 py-3 px-4 font-medium transition-colors ${
                   frequency === "one-time"
                     ? colorClasses.frequencyActive
-                    : "bg-card text-foreground hover:bg-muted"
+                    : colorClasses.frequencyInactive
                 }`}
               >
                 One-time
@@ -153,7 +153,7 @@ const DonationForm = ({ onSubmit }: DonationFormProps) => {
                 className={`flex-1 py-3 px-4 font-medium transition-colors ${
                   frequency === "monthly"
                     ? colorClasses.frequencyActive
-                    : "bg-card text-foreground hover:bg-muted"
+                    : colorClasses.frequencyInactive
                 }`}
               >
                 Monthly
