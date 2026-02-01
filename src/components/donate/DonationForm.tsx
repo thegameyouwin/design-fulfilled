@@ -170,15 +170,66 @@ const DonationForm = ({ onSubmit }: DonationFormProps) => {
               <label className="block text-sm font-medium text-foreground mb-2">
                 Currency
               </label>
-              <Select value={currency} onValueChange={(value) => { setCurrency(value); setAmount(value === "USD" ? "100" : "1,000"); }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
+              <Select 
+                value={currency} 
+                onValueChange={(value) => { 
+                  setCurrency(value); 
+                  setAmount(value === "USD" ? "100" : "1,000"); 
+                }}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue>
+                    {currency === "USD" && (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">$</span>
+                        <span>US Dollar (USD)</span>
+                      </div>
+                    )}
+                    {currency === "EUR" && (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">€</span>
+                        <span>Euro (EUR)</span>
+                      </div>
+                    )}
+                    {currency === "GBP" && (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">£</span>
+                        <span>British Pound (GBP)</span>
+                      </div>
+                    )}
+                    {currency === "KES" && (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">KSh</span>
+                        <span>Kenyan Shilling (KES)</span>
+                      </div>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
-                  <SelectItem value="EUR">€ Euro (EUR)</SelectItem>
-                  <SelectItem value="GBP">£ British Pound (GBP)</SelectItem>
-                  <SelectItem value="KES">KES Kenyan Shilling (KES)</SelectItem>
+                  <SelectItem value="USD">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">$</span>
+                      <span>US Dollar (USD)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="EUR">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">€</span>
+                      <span>Euro (EUR)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="GBP">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">£</span>
+                      <span>British Pound (GBP)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="KES">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">KSh</span>
+                      <span>Kenyan Shilling (KES)</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,13 +314,71 @@ const DonationForm = ({ onSubmit }: DonationFormProps) => {
               </label>
               <div className="flex gap-2">
                 <Select defaultValue="+254">
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue />
+                  <SelectTrigger className="w-32">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        <span>🇰🇪</span>
+                        <span className="text-xs">+254</span>
+                      </div>
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="+254">🇰🇪 +254</SelectItem>
-                    <SelectItem value="+255">🇹🇿 +255</SelectItem>
-                    <SelectItem value="+256">🇺🇬 +256</SelectItem>
+                    <SelectItem value="+254">
+                      <div className="flex items-center gap-2">
+                        <span>🇰🇪</span>
+                        <span className="text-xs">+254</span>
+                        <span className="text-xs text-muted-foreground">Kenya</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+255">
+                      <div className="flex items-center gap-2">
+                        <span>🇹🇿</span>
+                        <span className="text-xs">+255</span>
+                        <span className="text-xs text-muted-foreground">Tanzania</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+256">
+                      <div className="flex items-center gap-2">
+                        <span>🇺🇬</span>
+                        <span className="text-xs">+256</span>
+                        <span className="text-xs text-muted-foreground">Uganda</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+250">
+                      <div className="flex items-center gap-2">
+                        <span>🇷🇼</span>
+                        <span className="text-xs">+250</span>
+                        <span className="text-xs text-muted-foreground">Rwanda</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+257">
+                      <div className="flex items-center gap-2">
+                        <span>🇧🇮</span>
+                        <span className="text-xs">+257</span>
+                        <span className="text-xs text-muted-foreground">Burundi</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+258">
+                      <div className="flex items-center gap-2">
+                        <span>🇲🇿</span>
+                        <span className="text-xs">+258</span>
+                        <span className="text-xs text-muted-foreground">Mozambique</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+27">
+                      <div className="flex items-center gap-2">
+                        <span>🇿🇦</span>
+                        <span className="text-xs">+27</span>
+                        <span className="text-xs text-muted-foreground">South Africa</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+260">
+                      <div className="flex items-center gap-2">
+                        <span>🇿🇲</span>
+                        <span className="text-xs">+260</span>
+                        <span className="text-xs text-muted-foreground">Zambia</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
