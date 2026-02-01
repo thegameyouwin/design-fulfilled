@@ -71,27 +71,84 @@ const Donate = () => {
     if (method === "stripe") {
       setStep("payment-selection");
     } else {
-      // M-Pesa flow - save and show thank you
+      // M-Pesa flow
       setIsSubmitting(true);
       const donation = await saveDonation("pending");
-      setIsSubmitting(false);
       
       if (donation) {
-        toast.success("Donation recorded! You will receive an M-Pesa prompt shortly.");
-        setStep("thank-you");
+        // Call M-Pesa edge function
+        const numericAmount = parseFloat(amount.replace(/,/g, ""));
+        const { data: mpesaData, error } = await supabase.functions.invoke("mpesa-payment", {
+          body: {
+            donationId: donation.id,
+            amount: numericAmount,
+            phone: data.phone,
+          },
+        });
+
+        if (error) {
+          toast.error("M-Pesa payment initiation failed. Please try again.");
+        } else if (mpesaData?.instructions) {
+          toast.success("Please complete your M-Pesa payment using the instructions provided.");
+          setStep("thank-you");
+        }
       }
+      setIsSubmitting(false);
     }
   };
 
   const handlePaymentSelect = async (provider: "stripe" | "paypal") => {
     setIsSubmitting(true);
+    setPaymentMethod("stripe"); // Both Stripe and PayPal are international
     const donation = await saveDonation("pending");
-    setIsSubmitting(false);
     
-    if (donation) {
-      console.log(`Processing ${provider} payment for ${donationAmount}`);
-      toast.success(`Redirecting to ${provider}...`);
-      setStep("thank-you");
+    if (!donation || !formData) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const numericAmount = parseFloat(donationAmount.replace(/,/g, ""));
+    const baseUrl = window.location.origin;
+
+    try {
+      if (provider === "stripe") {
+        const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+          body: {
+            donationId: donation.id,
+            amount: numericAmount,
+            currency: formData.currency,
+            email: formData.email,
+            successUrl: `${baseUrl}/donate?success=true`,
+            cancelUrl: `${baseUrl}/donate`,
+          },
+        });
+
+        if (error || !data?.url) {
+          throw new Error(data?.error || "Failed to create checkout session");
+        }
+
+        window.location.href = data.url;
+      } else {
+        const { data, error } = await supabase.functions.invoke("paypal-order", {
+          body: {
+            donationId: donation.id,
+            amount: numericAmount,
+            currency: formData.currency,
+            returnUrl: `${baseUrl}/donate?success=true`,
+            cancelUrl: `${baseUrl}/donate`,
+          },
+        });
+
+        if (error || !data?.approvalUrl) {
+          throw new Error(data?.error || "Failed to create PayPal order");
+        }
+
+        window.location.href = data.approvalUrl;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Payment initialization failed";
+      toast.error(message);
+      setIsSubmitting(false);
     }
   };
 
