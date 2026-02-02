@@ -5,7 +5,6 @@ import LeadershipSection from "@/components/LeadershipSection";
 import CriticalIssuesSection from "@/components/CriticalIssuesSection";
 import YouTubeSection from "@/components/YouTubeSection";
 import VoterDriveSection from "@/components/VoterDriveSection";
-import JoinMovementCTA from "@/components/JoinMovementCTA";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -15,11 +14,10 @@ const Index = () => {
       <main>
         <HeroSection />
         <LatestPressSection />
-        <LeadershipSection />
-        <CriticalIssuesSection />
         <YouTubeSection />
+        <CriticalIssuesSection />
+        <LeadershipSection />
         <VoterDriveSection />
-        <JoinMovementCTA />
       </main>
       <Footer />
     </div>

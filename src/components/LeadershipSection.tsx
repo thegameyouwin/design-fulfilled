@@ -23,7 +23,7 @@ const pillars = [
 
 const LeadershipSection = () => {
   return (
-    <section className="py-16 md:py-24 bg-accent/10">
+    <section className="py-16 md:py-24 bg-amber-50/80">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left - Image */}
@@ -36,9 +36,9 @@ const LeadershipSection = () => {
               />
             </div>
             {/* Badge */}
-            <div className="absolute bottom-6 left-6 bg-primary text-primary-foreground px-6 py-3 rounded-lg shadow-lg">
-              <p className="text-2xl font-bold">2027</p>
-              <p className="text-sm">Presidential Candidate</p>
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 md:bottom-6 bg-primary text-primary-foreground px-8 py-4 rounded-xl shadow-lg text-center">
+              <p className="text-3xl font-bold">2027</p>
+              <p className="text-sm font-medium">Presidential Candidate</p>
             </div>
           </div>
 
@@ -85,15 +85,15 @@ const LeadershipSection = () => {
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="rounded-full px-6">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 rounded-lg px-8">
                 <Link to="/about" className="flex items-center gap-2">
                   LEARN MORE ABOUT MARAGA
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full px-6">
+              <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary/10 rounded-lg px-8">
                 <Link to="/pillars" className="flex items-center gap-2">
-                  CAMPAIGN PILLARS
+                  CAMPAIGNS PILLARS
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
