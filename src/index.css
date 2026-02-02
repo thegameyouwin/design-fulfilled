@@ -19,13 +19,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary: Kenyan Green */
-    --primary: 152 70% 32%;
+    /* Primary: Kenyan Green - Lighter */
+    --primary: 152 55% 42%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Light green tint */
-    --secondary: 152 40% 95%;
-    --secondary-foreground: 152 70% 25%;
+    --secondary: 152 35% 96%;
+    --secondary-foreground: 152 55% 35%;
 
     /* Muted: Soft gray */
     --muted: 210 20% 96%;
@@ -47,9 +47,9 @@
     --radius: 0.5rem;
 
     /* Campaign specific */
-    --campaign-green: 152 70% 32%;
-    --campaign-green-dark: 152 75% 25%;
-    --campaign-green-light: 152 50% 45%;
+    --campaign-green: 152 55% 42%;
+    --campaign-green-dark: 152 60% 35%;
+    --campaign-green-light: 152 45% 55%;
     --campaign-red: 0 72% 51%;
     --campaign-red-dark: 0 72% 45%;
     --campaign-gold: 45 93% 47%;
