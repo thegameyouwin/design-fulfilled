@@ -23,7 +23,7 @@ const HeroSection = ({ maragaImage }: HeroSectionProps) => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-2">
               Restore.
             </h1>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight text-accent mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight text-campaign-gold animate-pulse mb-6">
               Rebuild.
             </h1>
             
@@ -36,7 +36,7 @@ const HeroSection = ({ maragaImage }: HeroSectionProps) => {
               <Button asChild size="lg" className="btn-movement bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-full px-8">
                 <Link to="/join">Join the Movement</Link>
               </Button>
-              <Button asChild size="lg" className="btn-donate rounded-full px-8">
+              <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-8">
                 <Link to="/donate">Contribute Now</Link>
               </Button>
             </div>
