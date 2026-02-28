@@ -5,12 +5,13 @@ import DonationForm from "@/components/donate/DonationForm";
 import DonationStats from "@/components/donate/DonationStats";
 import PaymentMethodSelection from "@/components/donate/PaymentMethodSelection";
 import ManualPaymentForm from "@/components/donate/ManualPaymentForm";
+import StkPaymentForm from "@/components/donate/StkPaymentForm";
 import ThankYouDonation from "@/components/ThankYouDonation";
 import { Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type DonateStep = "form" | "payment-selection" | "manual-payment" | "thank-you";
+type DonateStep = "form" | "payment-selection" | "stk-payment" | "manual-payment" | "thank-you";
 
 interface DonationFormData {
   name: string;
@@ -32,9 +33,7 @@ const Donate = () => {
 
   const saveDonation = async (status: string = "pending") => {
     if (!formData) return null;
-    
     const numericAmount = parseFloat(donationAmount.replace(/,/g, ""));
-    
     const { data, error } = await supabase
       .from("donations")
       .insert({
@@ -47,39 +46,36 @@ const Donate = () => {
         frequency: formData.frequency,
         message: formData.message || null,
         show_info: formData.showInfo,
-        status: status,
+        status,
       })
       .select()
       .single();
-
     if (error) {
       console.error("Error saving donation:", error);
       toast.error("Failed to save donation. Please try again.");
       return null;
     }
-
     return data;
   };
 
   const handleFormSubmit = async (
-    amount: string, 
+    amount: string,
     method: "mpesa" | "stripe",
     data: DonationFormData
   ) => {
     setDonationAmount(amount);
     setPaymentMethod(method);
     setFormData(data);
-    
+
     if (method === "stripe") {
       setStep("payment-selection");
     } else {
-      // M-Pesa flow - save donation then go to manual payment
+      // M-Pesa: save donation then initiate STK push
       setIsSubmitting(true);
       const donation = await saveDonation("pending");
-      
       if (donation) {
         setCurrentDonationId(donation.id);
-        setStep("manual-payment");
+        setStep("stk-payment");
       }
       setIsSubmitting(false);
     }
@@ -87,13 +83,9 @@ const Donate = () => {
 
   const handlePaymentSelect = async (provider: "stripe" | "paypal") => {
     setIsSubmitting(true);
-    setPaymentMethod("stripe"); // Both Stripe and PayPal are international
+    setPaymentMethod("stripe");
     const donation = await saveDonation("pending");
-    
-    if (!donation || !formData) {
-      setIsSubmitting(false);
-      return;
-    }
+    if (!donation || !formData) { setIsSubmitting(false); return; }
 
     const numericAmount = parseFloat(donationAmount.replace(/,/g, ""));
     const baseUrl = window.location.origin;
@@ -102,35 +94,20 @@ const Donate = () => {
       if (provider === "stripe") {
         const { data, error } = await supabase.functions.invoke("stripe-checkout", {
           body: {
-            donationId: donation.id,
-            amount: numericAmount,
-            currency: formData.currency,
-            email: formData.email,
-            successUrl: `${baseUrl}/donate?success=true`,
-            cancelUrl: `${baseUrl}/donate`,
+            donationId: donation.id, amount: numericAmount, currency: formData.currency,
+            email: formData.email, successUrl: `${baseUrl}/donate?success=true`, cancelUrl: `${baseUrl}/donate`,
           },
         });
-
-        if (error || !data?.url) {
-          throw new Error(data?.error || "Failed to create checkout session");
-        }
-
+        if (error || !data?.url) throw new Error(data?.error || "Failed to create checkout session");
         window.location.href = data.url;
       } else {
         const { data, error } = await supabase.functions.invoke("paypal-order", {
           body: {
-            donationId: donation.id,
-            amount: numericAmount,
-            currency: formData.currency,
-            returnUrl: `${baseUrl}/donate?success=true`,
-            cancelUrl: `${baseUrl}/donate`,
+            donationId: donation.id, amount: numericAmount, currency: formData.currency,
+            returnUrl: `${baseUrl}/donate?success=true`, cancelUrl: `${baseUrl}/donate`,
           },
         });
-
-        if (error || !data?.approvalUrl) {
-          throw new Error(data?.error || "Failed to create PayPal order");
-        }
-
+        if (error || !data?.approvalUrl) throw new Error(data?.error || "Failed to create PayPal order");
         window.location.href = data.approvalUrl;
       }
     } catch (err: unknown) {
@@ -144,9 +121,7 @@ const Donate = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main>
-          <ThankYouDonation />
-        </main>
+        <main><ThankYouDonation /></main>
         <Footer />
       </div>
     );
@@ -155,20 +130,23 @@ const Donate = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="py-12 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-[400px_1fr] gap-8 max-w-6xl mx-auto">
-            
-            {/* Left Column - Stats */}
-            <div className="hidden lg:block">
-              <DonationStats />
-            </div>
-
-            {/* Right Column - Donation Form or Payment Selection */}
+            <div className="hidden lg:block"><DonationStats /></div>
             <div>
-              {step === "form" && (
-                <DonationForm onSubmit={handleFormSubmit} />
+              {step === "form" && <DonationForm onSubmit={handleFormSubmit} />}
+
+              {step === "stk-payment" && currentDonationId && formData && (
+                <StkPaymentForm
+                  donationId={currentDonationId}
+                  amount={donationAmount}
+                  phone={formData.phone}
+                  currency={formData.currency}
+                  onComplete={() => setStep("thank-you")}
+                  onBack={() => setStep("form")}
+                  onFallbackManual={() => setStep("manual-payment")}
+                />
               )}
 
               {step === "manual-payment" && currentDonationId && formData && (
@@ -193,7 +171,6 @@ const Donate = () => {
                 />
               )}
 
-              {/* Footer Info */}
               <div className="text-center text-sm text-muted-foreground mt-6">
                 <p className="flex items-center justify-center gap-1">
                   <Shield className="w-4 h-4 text-primary" />
@@ -207,14 +184,9 @@ const Donate = () => {
               </div>
             </div>
           </div>
-
-          {/* Mobile Stats */}
-          <div className="lg:hidden mt-8">
-            <DonationStats />
-          </div>
+          <div className="lg:hidden mt-8"><DonationStats /></div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

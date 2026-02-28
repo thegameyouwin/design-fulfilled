@@ -107,6 +107,65 @@ export type Database = {
         }
         Relationships: []
       }
+      pesaflux_transactions: {
+        Row: {
+          amount: number
+          checkout_request_id: string | null
+          created_at: string
+          donation_id: string | null
+          id: string
+          merchant_request_id: string | null
+          msisdn: string
+          raw_callback: Json | null
+          receipt: string | null
+          reference: string | null
+          response_code: string | null
+          status: string
+          transaction_request_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          checkout_request_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          msisdn: string
+          raw_callback?: Json | null
+          receipt?: string | null
+          reference?: string | null
+          response_code?: string | null
+          status?: string
+          transaction_request_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          checkout_request_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          msisdn?: string
+          raw_callback?: Json | null
+          receipt?: string | null
+          reference?: string | null
+          response_code?: string | null
+          status?: string
+          transaction_request_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesaflux_transactions_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           id: string
@@ -131,6 +190,39 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           value?: string | null
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          message_id: string | null
+          phone: string
+          raw_response: Json | null
+          sender_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          message_id?: string | null
+          phone: string
+          raw_response?: Json | null
+          sender_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          message_id?: string | null
+          phone?: string
+          raw_response?: Json | null
+          sender_id?: string | null
+          status?: string
         }
         Relationships: []
       }

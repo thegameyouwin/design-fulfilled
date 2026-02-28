@@ -23,6 +23,8 @@ const paymentKeys = [
   "ncba_bank_name",
   "mpesa_paybill",
   "mpesa_account",
+  "pesaflux_api_key",
+  "pesaflux_email",
   "stripe_publishable_key",
   "stripe_secret_key",
   "paypal_client_id",
