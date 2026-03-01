@@ -11,21 +11,14 @@ const HeroSection = ({ maragaImage }: HeroSectionProps) => {
     <section className="gradient-hero py-16 md:py-24">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          {/* Left Content */}
           <div className="text-primary-foreground">
             <div className="inline-block px-3 py-1 bg-primary-foreground/10 border border-primary-foreground/20 text-sm mb-6">
               Presidential Candidate 2027
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-2">
-              Reset.
-            </h1>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-2">
-              Restore.
-            </h1>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight text-campaign-gold animate-pulse mb-6">
-              Rebuild.
-            </h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-2">Reset.</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-2">Restore.</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight text-campaign-gold animate-pulse mb-6">Rebuild.</h1>
             
             <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-lg">
               Join David Maraga's vision for a better Kenya. Together, we can restore integrity, 
@@ -33,36 +26,24 @@ const HeroSection = ({ maragaImage }: HeroSectionProps) => {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="btn-movement bg-primary-foreground text-primary hover:bg-primary-foreground/90 px-8">
-                <Link to="/join">Join the Movement</Link>
+              <Button asChild size="lg" variant="outline" className="border-2 border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary px-8 font-semibold uppercase tracking-wider">
+                <Link to="/join">Join Our Movement</Link>
               </Button>
-              <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-8">
+              <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 font-semibold uppercase tracking-wider">
                 <Link to="/donate">Contribute Now</Link>
               </Button>
             </div>
           </div>
 
-          {/* Right Content - Candidate Card */}
           <div className="flex justify-center md:justify-end">
             <div className="bg-card shadow-elevated overflow-hidden max-w-sm">
-              {/* Maraga Image */}
               <div className="aspect-[4/3] bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center relative overflow-hidden">
-                <img 
-                  src={maragaImage || maragaHero} 
-                  alt="David Maraga" 
-                  className="w-full h-full object-cover"
-                />
+                <img src={maragaImage || maragaHero} alt="David Maraga" className="w-full h-full object-cover" />
               </div>
-              
-              {/* Info */}
               <div className="p-6 bg-primary text-primary-foreground">
                 <h3 className="text-xl font-bold mb-1">David Maraga</h3>
-                <p className="text-primary-foreground/80 text-sm">
-                  Former Chief Justice of Kenya
-                </p>
-                <p className="text-primary-foreground/80 text-sm">
-                  Presidential Candidate, 2027
-                </p>
+                <p className="text-primary-foreground/80 text-sm">Former Chief Justice of Kenya</p>
+                <p className="text-primary-foreground/80 text-sm">Presidential Candidate, 2027</p>
               </div>
             </div>
           </div>
