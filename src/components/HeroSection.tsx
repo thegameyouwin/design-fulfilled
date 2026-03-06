@@ -29,7 +29,8 @@ const HeroSection = ({ maragaImage }: HeroSectionProps) => {
               Restore.
             </h1>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-[#c6d64a] leading-tight mb-6">
+            {/* Rebuild Text with Glow */}
+            <h1 className="text-5xl md:text-6xl font-bold text-[#c6d64a] leading-tight mb-6 animate-glow">
               Rebuild.
             </h1>
 
