@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
-import maragaHero from "@/assets/DAVID.web";
+import maragaHero from "@/assets/DAVID.webp";
 
 const pillars = [
   {
