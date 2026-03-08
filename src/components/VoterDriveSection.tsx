@@ -147,8 +147,8 @@ const VoterDriveSection = ({ showThankYou = false }: VoterDriveSectionProps) => 
       <div className="container mx-auto px-4">
         <div className="w-full lg:w-4/5 mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <span className="inline-block px-4 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium mb-4">
+          <div className="text-center mb-10 text-white">
+            <span className="inline-block px-4 py-1 bg-white/20 text-white text-sm font-medium mb-4 rounded-full backdrop-blur">
               Get Involved
             </span>
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-3">
