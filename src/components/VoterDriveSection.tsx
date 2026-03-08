@@ -143,7 +143,7 @@ const VoterDriveSection = ({ showThankYou = false }: VoterDriveSectionProps) => 
   };
 
   return (
-    <section id="join" className="py-16 bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+    <section   id="join"   className="py-20 bg-gradient-to-br from-green-700 via-green-600 to-green-500 min-h-screen flex items-center justify-center" >
       <div className="container mx-auto px-4">
         <div className="w-full lg:w-4/5 mx-auto">
           {/* Header */}
