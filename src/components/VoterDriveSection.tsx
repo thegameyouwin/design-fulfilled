@@ -154,7 +154,7 @@ const VoterDriveSection = ({ showThankYou = false }: VoterDriveSectionProps) => 
             <h2 className="text-3xl md:text-5xl font-heading font-bold text-white mb-3">
               Join Voter Drive
             </h2>
-            <p className="text-gray-600">
+            <p className="text-green-100 max-w-xl mx-auto">
               Be part of the change Kenya needs. Your voice and action can help Reset, Restore, and Rebuild our nation.
             </p>
           </div>
