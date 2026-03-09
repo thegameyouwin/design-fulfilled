@@ -24,7 +24,7 @@ const DonationStats = () => {
       mpesa: { amount: 591096, donations: 1929, donors: 1643 },
       stripe: { amount: 82891, donations: 30, donors: 24 },
       paypal: { amount: 28313, donations: 13, donors: 13 },
-      direct: { amount: 7112650, donations: 31 },
+      direct: { amount: 7112650, donations: 31, donors: 0 },
     },
   });
 
@@ -107,7 +107,7 @@ const DonationStats = () => {
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const formatAmount = (amount: number) => `Ksh ${amount.toLocaleString()}`;
