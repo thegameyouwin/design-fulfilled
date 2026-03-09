@@ -20,6 +20,7 @@ import AdminDonationVerification from "@/components/admin/AdminDonationVerificat
 import AdminPesaFluxConfig from "@/components/admin/AdminPesaFluxConfig";
 import AdminSMS from "@/components/admin/AdminSMS";
 import AdminTransactions from "@/components/admin/AdminTransactions";
+import AdminMaintenanceToggle from "@/components/admin/AdminMaintenanceToggle";
 
 interface DashboardStats {
   totalDonations: number;
