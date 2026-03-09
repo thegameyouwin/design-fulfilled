@@ -107,7 +107,7 @@ const DonationStats = () => {
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const formatAmount = (amount: number) => `Ksh ${amount.toLocaleString()}`;

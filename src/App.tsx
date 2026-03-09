@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useSubdomain } from "@/hooks/useSubdomain";
+import { useMaintenanceMode } from "@/hooks/useMaintenanceMode";
 
 // Main site pages
 import Index from "./pages/Index";
@@ -13,6 +14,7 @@ import Press from "./pages/Press";
 import Join from "./pages/Join";
 import Donate from "./pages/Donate";
 import NotFound from "./pages/NotFound";
+import Maintenance from "./pages/Maintenance";
 
 // Admin pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -22,6 +24,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const subdomain = useSubdomain();
+  const { isMaintenanceMode, isLoading } = useMaintenanceMode();
 
   if (subdomain === "admin") {
     return (
@@ -30,6 +33,18 @@ const AppContent = () => {
         <Route path="/login" element={<AdminLogin />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="*" element={<AdminLogin />} />
+      </Routes>
+    );
+  }
+
+  // Show maintenance page for public routes (not admin)
+  if (!isLoading && isMaintenanceMode) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="*" element={<Maintenance />} />
       </Routes>
     );
   }
