@@ -177,7 +177,7 @@ const Donate = () => {
                   You're donating to the Maraga Campaign. Transactions processed securely.
                 </p>
                 <p className="mt-2">
-                  Questions? <a href="mailto:donations@davidmaraga.com" className="text-primary underline">donations@davidmaraga.com</a>
+                  Questions? <a href="mailto:donations@davidmaraga.com" className="text-primary underline">donations@davidmaraga.co</a>
                   {" • "}
                   <a href="#" className="text-primary underline">Privacy</a>
                 </p>
