@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton"; // shadcn skeleton – ensure it's installed
 import {
   LayoutDashboard, DollarSign, Users, Settings, LogOut,
   TrendingUp, UserPlus, CreditCard, Key, ShieldCheck,
@@ -22,6 +22,7 @@ import AdminSMS from "@/components/admin/AdminSMS";
 import AdminTransactions from "@/components/admin/AdminTransactions";
 import AdminMaintenanceToggle from "@/components/admin/AdminMaintenanceToggle";
 
+// ===== Types =====
 interface DashboardStats {
   totalDonations: number;
   totalAmount: number;
@@ -31,26 +32,49 @@ interface DashboardStats {
   failedDonations: number;
   stkTransactions: number;
   smsSent: number;
-  recentDonations: any[];
-  recentVolunteers: any[];
+  recentDonations: any[]; // Replace `any` with a proper Donation type if available
+  recentVolunteers: any[]; // Replace `any` with a proper Volunteer type
 }
 
+// ===== Constants (moved outside component to avoid recreation) =====
+const SIDEBAR_ITEMS = [
+  { id: "overview", label: "Overview", icon: BarChart3 },
+  { id: "donations", label: "Donations", icon: DollarSign },
+  { id: "verification", label: "Verify Payments", icon: ShieldCheck },
+  { id: "transactions", label: "M-Pesa Txns", icon: Activity },
+  { id: "volunteers", label: "Volunteers", icon: Users },
+  { id: "sms", label: "SMS Manager", icon: MessageSquare },
+  { id: "content", label: "Site Content", icon: LayoutDashboard },
+  { id: "api-config", label: "API Config", icon: Key },
+  { id: "settings", label: "Settings", icon: Settings },
+] as const;
+
 const AdminDashboard = () => {
-  const { user, isAdmin, isLoading, signOut } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Stats fetching states
   const [stats, setStats] = useState<DashboardStats>({
     totalDonations: 0, totalAmount: 0, totalVolunteers: 0,
     pendingDonations: 0, completedDonations: 0, failedDonations: 0,
     stkTransactions: 0, smsSent: 0, recentDonations: [], recentVolunteers: [],
   });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
+  // Redirect if not authenticated or not admin
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) navigate("/admin/login");
-  }, [user, isAdmin, isLoading, navigate]);
+    if (!authLoading && (!user || !isAdmin)) {
+      navigate("/admin/login");
+    }
+  }, [user, isAdmin, authLoading, navigate]);
 
-  useEffect(() => {
-    const fetchStats = async () => {
+  // Fetch dashboard stats
+  const fetchStats = async () => {
+    setIsLoadingStats(true);
+    setStatsError(null);
+    try {
       const [donationsRes, volRes, stkRes, smsRes, recentDonRes, recentVolRes] = await Promise.all([
         supabase.from("donations").select("amount, status"),
         supabase.from("volunteers").select("*", { count: "exact", head: true }),
@@ -60,46 +84,88 @@ const AdminDashboard = () => {
         supabase.from("volunteers").select("*").order("created_at", { ascending: false }).limit(5),
       ]);
 
-      const donations = donationsRes.data;
+      // Check for errors
+      if (donationsRes.error) throw donationsRes.error;
+      if (volRes.error) throw volRes.error;
+      if (stkRes.error) throw stkRes.error;
+      if (smsRes.error) throw smsRes.error;
+      if (recentDonRes.error) throw recentDonRes.error;
+      if (recentVolRes.error) throw recentVolRes.error;
+
+      const donations = donationsRes.data || [];
       setStats({
-        totalDonations: donations?.length || 0,
-        totalAmount: donations?.filter(d => d.status === "completed").reduce((sum, d) => sum + Number(d.amount), 0) || 0,
-        pendingDonations: donations?.filter(d => d.status === "pending").length || 0,
-        completedDonations: donations?.filter(d => d.status === "completed").length || 0,
-        failedDonations: donations?.filter(d => d.status === "failed").length || 0,
+        totalDonations: donations.length,
+        totalAmount: donations
+          .filter(d => d.status === "completed")
+          .reduce((sum, d) => sum + Number(d.amount), 0),
+        pendingDonations: donations.filter(d => d.status === "pending").length,
+        completedDonations: donations.filter(d => d.status === "completed").length,
+        failedDonations: donations.filter(d => d.status === "failed").length,
         totalVolunteers: volRes.count ?? 0,
         stkTransactions: stkRes.count ?? 0,
         smsSent: smsRes.count ?? 0,
         recentDonations: recentDonRes.data || [],
         recentVolunteers: recentVolRes.data || [],
       });
-    };
-    if (user && isAdmin) fetchStats();
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      setStatsError("Failed to load dashboard data. Please try again.");
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchStats();
+    }
   }, [user, isAdmin]);
 
-  const handleSignOut = async () => { await signOut(); navigate("/admin/login"); };
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/admin/login");
+  };
 
-  if (isLoading) {
+  const retryFetchStats = () => {
+    fetchStats();
+  };
+
+  // Show global loading while auth is being checked
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[hsl(215,50%,12%)]">
-        <div className="animate-spin h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full" />
       </div>
     );
   }
 
+  // If not authorized, render nothing (redirect will happen)
   if (!user || !isAdmin) return null;
 
-  const sidebarItems = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "donations", label: "Donations", icon: DollarSign },
-    { id: "verification", label: "Verify Payments", icon: ShieldCheck },
-    { id: "transactions", label: "M-Pesa Txns", icon: Activity },
-    { id: "volunteers", label: "Volunteers", icon: Users },
-    { id: "sms", label: "SMS Manager", icon: MessageSquare },
-    { id: "content", label: "Site Content", icon: LayoutDashboard },
-    { id: "api-config", label: "API Config", icon: Key },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
+  // ===== Render helpers =====
+  const renderStatsSkeleton = () => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <Card key={i}>
+          <CardContent className="pt-5 pb-4">
+            <Skeleton className="h-4 w-20 mb-2" />
+            <Skeleton className="h-8 w-24" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  const renderRecentSkeleton = () => (
+    <div className="space-y-3">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="p-3 bg-muted/50 border border-border">
+          <Skeleton className="h-5 w-32 mb-2" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[hsl(215,30%,96%)] flex">
@@ -115,8 +181,8 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarItems.map((item) => (
+        <nav className="flex-1 p-4 space-y-1" aria-label="Admin navigation">
+          {SIDEBAR_ITEMS.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
@@ -125,6 +191,7 @@ const AdminDashboard = () => {
                   ? "bg-primary text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
               }`}
+              aria-current={activeTab === item.id ? "page" : undefined}
             >
               <item.icon className="w-4 h-4" />
               {item.label}
@@ -155,8 +222,8 @@ const AdminDashboard = () => {
 
         {/* Mobile tab bar */}
         <div className="lg:hidden overflow-x-auto bg-card border-b border-border">
-          <div className="flex p-2 gap-1 min-w-max">
-            {sidebarItems.map((item) => (
+          <div className="flex p-2 gap-1 min-w-max" role="tablist">
+            {SIDEBAR_ITEMS.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
@@ -165,6 +232,8 @@ const AdminDashboard = () => {
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
+                role="tab"
+                aria-selected={activeTab === item.id}
               >
                 <item.icon className="w-3.5 h-3.5" />
                 {item.label}
@@ -183,102 +252,131 @@ const AdminDashboard = () => {
                 <p className="text-muted-foreground text-sm">Campaign performance at a glance</p>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-primary">
-                  <CardContent className="pt-5 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Raised</p>
-                        <p className="text-2xl font-bold text-primary mt-1">KES {stats.totalAmount.toLocaleString()}</p>
-                      </div>
-                      <div className="w-10 h-10 bg-primary/10 flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-primary" />
-                      </div>
-                    </div>
+              {/* Error state */}
+              {statsError && (
+                <Card className="border-destructive">
+                  <CardContent className="pt-6 pb-6 text-center">
+                    <p className="text-destructive mb-3">{statsError}</p>
+                    <Button onClick={retryFetchStats} variant="outline">
+                      Retry
+                    </Button>
                   </CardContent>
                 </Card>
+              )}
 
-                <Card className="border-l-4 border-l-campaign-gold">
-                  <CardContent className="pt-5 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Donations</p>
-                        <p className="text-2xl font-bold mt-1">{stats.totalDonations}</p>
-                        <p className="text-xs text-campaign-gold font-medium">{stats.pendingDonations} pending</p>
+              {/* Stats Grid with loading skeletons */}
+              {isLoadingStats ? (
+                renderStatsSkeleton()
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card className="border-l-4 border-l-primary">
+                    <CardContent className="pt-5 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Raised</p>
+                          <p className="text-2xl font-bold text-primary mt-1">KES {stats.totalAmount.toLocaleString()}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <DollarSign className="w-5 h-5 text-primary" />
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-campaign-gold/10 flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-campaign-gold" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-l-4 border-l-[hsl(210,100%,50%)]">
-                  <CardContent className="pt-5 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Volunteers</p>
-                        <p className="text-2xl font-bold mt-1">{stats.totalVolunteers}</p>
+                  <Card className="border-l-4 border-l-campaign-gold">
+                    <CardContent className="pt-5 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Donations</p>
+                          <p className="text-2xl font-bold mt-1">{stats.totalDonations}</p>
+                          <p className="text-xs text-campaign-gold font-medium">{stats.pendingDonations} pending</p>
+                        </div>
+                        <div className="w-10 h-10 bg-campaign-gold/10 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-campaign-gold" />
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-[hsl(210,100%,50%)]/10 flex items-center justify-center">
-                        <UserPlus className="w-5 h-5 text-[hsl(210,100%,50%)]" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-l-4 border-l-accent">
-                  <CardContent className="pt-5 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">SMS Sent</p>
-                        <p className="text-2xl font-bold mt-1">{stats.smsSent}</p>
+                  <Card className="border-l-4 border-l-[hsl(210,100%,50%)]">
+                    <CardContent className="pt-5 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">Volunteers</p>
+                          <p className="text-2xl font-bold mt-1">{stats.totalVolunteers}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-[hsl(210,100%,50%)]/10 rounded-full flex items-center justify-center">
+                          <UserPlus className="w-5 h-5 text-[hsl(210,100%,50%)]" />
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-accent/10 flex items-center justify-center">
-                        <MessageSquare className="w-5 h-5 text-accent" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Secondary Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-5 pb-4 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Completed</p>
-                      <p className="text-lg font-bold text-primary">{stats.completedDonations}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-5 pb-4 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-campaign-gold/10 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-campaign-gold" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                      <p className="text-lg font-bold text-campaign-gold">{stats.pendingDonations}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-5 pb-4 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-destructive/10 flex items-center justify-center">
-                      <XCircle className="w-5 h-5 text-destructive" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Failed</p>
-                      <p className="text-lg font-bold text-destructive">{stats.failedDonations}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  <Card className="border-l-4 border-l-accent">
+                    <CardContent className="pt-5 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">SMS Sent</p>
+                          <p className="text-2xl font-bold mt-1">{stats.smsSent}</p>
+                        </div>
+                        <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                          <MessageSquare className="w-5 h-5 text-accent" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Secondary Stats with skeletons */}
+              {isLoadingStats ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="pt-5 pb-4">
+                        <Skeleton className="h-4 w-16 mb-2" />
+                        <Skeleton className="h-6 w-12" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="pt-5 pb-4 flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Completed</p>
+                        <p className="text-lg font-bold text-primary">{stats.completedDonations}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5 pb-4 flex items-center gap-4">
+                      <div className="w-10 h-10 bg-campaign-gold/10 rounded-full flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-campaign-gold" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                        <p className="text-lg font-bold text-campaign-gold">{stats.pendingDonations}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5 pb-4 flex items-center gap-4">
+                      <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
+                        <XCircle className="w-5 h-5 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Failed</p>
+                        <p className="text-lg font-bold text-destructive">{stats.failedDonations}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Recent Activity */}
               <div className="grid lg:grid-cols-2 gap-6">
@@ -288,7 +386,9 @@ const AdminDashboard = () => {
                     <CardDescription>Latest 5 donations received</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {stats.recentDonations.length === 0 ? (
+                    {isLoadingStats ? (
+                      renderRecentSkeleton()
+                    ) : stats.recentDonations.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-6">No donations yet</p>
                     ) : (
                       <div className="space-y-3">
@@ -320,7 +420,9 @@ const AdminDashboard = () => {
                     <CardDescription>Latest 5 volunteer sign-ups</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {stats.recentVolunteers.length === 0 ? (
+                    {isLoadingStats ? (
+                      renderRecentSkeleton()
+                    ) : stats.recentVolunteers.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-6">No volunteers yet</p>
                     ) : (
                       <div className="space-y-3">
