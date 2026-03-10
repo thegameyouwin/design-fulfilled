@@ -15,10 +15,12 @@ interface ManualPaymentFormProps {
   onBack: () => void;
 }
 
-interface PaybillInfo {
-  paybill: string;
-  accountNumber: string;
+interface BankInfo {
   bankName: string;
+  accountNumber: string;
+  accountName: string;
+  branch: string;
+  swiftCode?: string;
   instructions: string;
 }
 
@@ -27,32 +29,43 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
   const [transactionCode, setTransactionCode] = useState("");
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paybillInfo, setPaybillInfo] = useState<PaybillInfo>({
-    paybill: "",
-    accountNumber: "",
-    bankName: "NCBA Bank",
-    instructions: "",
+  const [bankInfo, setBankInfo] = useState<BankInfo>({
+    bankName: "Standard Chartered Bank",
+    accountNumber: "0100455663100",
+    accountName: "Maraga Campaign 2027",
+    branch: "Kenyatta Avenue, Nairobi",
+    swiftCode: "SCBLKENX",
+    instructions: "Please include your name as the payment reference.",
   });
 
   useEffect(() => {
-    const fetchPaybillInfo = async () => {
+    const fetchBankInfo = async () => {
       const { data } = await supabase
         .from("site_settings")
         .select("key, value")
-        .in("key", ["ncba_paybill", "ncba_account_number", "ncba_bank_name", "payment_instructions", "mpesa_paybill"]);
+        .in("key", [
+          "bank_name",
+          "bank_account",
+          "bank_account_name",
+          "bank_branch",
+          "bank_swift",
+          "bank_instructions"
+        ]);
 
       if (data) {
         const settings: Record<string, string> = {};
         data.forEach((s) => { settings[s.key] = s.value || ""; });
-        setPaybillInfo({
-          paybill: settings.ncba_paybill || settings.mpesa_paybill || "",
-          accountNumber: settings.ncba_account_number || "",
-          bankName: settings.ncba_bank_name || "NCBA Bank",
-          instructions: settings.payment_instructions || "",
+        setBankInfo({
+          bankName: settings.bank_name || bankInfo.bankName,
+          accountNumber: settings.bank_account || bankInfo.accountNumber,
+          accountName: settings.bank_account_name || bankInfo.accountName,
+          branch: settings.bank_branch || bankInfo.branch,
+          swiftCode: settings.bank_swift || bankInfo.swiftCode,
+          instructions: settings.bank_instructions || bankInfo.instructions,
         });
       }
     };
-    fetchPaybillInfo();
+    fetchBankInfo();
   }, []);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -62,7 +75,7 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
 
   const handleSubmit = async () => {
     if (verificationType === "transaction_code" && !transactionCode.trim()) {
-      toast.error("Please enter your M-Pesa transaction code");
+      toast.error("Please enter your bank transaction reference");
       return;
     }
     if (verificationType === "screenshot" && !screenshotFile) {
@@ -121,38 +134,48 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
         <img src={maragaLogo} alt="Maraga '27" className="h-10 mx-auto mb-3" />
         <h2 className="text-xl font-heading font-bold">Complete Your Donation</h2>
         <p className="text-primary-foreground/80 text-sm mt-1">
-          {currency} {amount} via M-Pesa Paybill
+          {currency} {amount} via Bank Transfer
         </p>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Paybill Instructions */}
+        {/* Bank Details */}
         <div className="bg-secondary rounded-xl p-5 space-y-3">
-          <h3 className="font-semibold text-foreground">Payment Instructions</h3>
-          <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-            <li>Go to <strong>M-Pesa</strong> → Lipa na M-Pesa → Pay Bill</li>
-            {paybillInfo.paybill && (
-              <li className="flex items-center gap-2 flex-wrap">
-                Business Number: <strong className="text-foreground">{paybillInfo.paybill}</strong>
-                <button onClick={() => copyToClipboard(paybillInfo.paybill, "Paybill")} className="text-primary hover:text-primary/80">
+          <h3 className="font-semibold text-foreground">Bank Transfer Instructions</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Bank:</span>
+              <span className="font-medium text-foreground">{bankInfo.bankName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Account Name:</span>
+              <span className="font-medium text-foreground">{bankInfo.accountName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Account Number:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">{bankInfo.accountNumber}</span>
+                <button onClick={() => copyToClipboard(bankInfo.accountNumber, "Account number")} className="text-primary hover:text-primary/80">
                   <Copy className="w-3.5 h-3.5" />
                 </button>
-              </li>
+              </div>
+            </div>
+            {bankInfo.branch && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Branch:</span>
+                <span className="font-medium text-foreground">{bankInfo.branch}</span>
+              </div>
             )}
-            {paybillInfo.accountNumber && (
-              <li className="flex items-center gap-2 flex-wrap">
-                Account Number: <strong className="text-foreground">{paybillInfo.accountNumber}</strong>
-                <button onClick={() => copyToClipboard(paybillInfo.accountNumber, "Account")} className="text-primary hover:text-primary/80">
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </li>
+            {bankInfo.swiftCode && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">SWIFT Code:</span>
+                <span className="font-medium text-foreground">{bankInfo.swiftCode}</span>
+              </div>
             )}
-            <li>Enter Amount: <strong className="text-foreground">{currency} {amount}</strong></li>
-            <li>Enter your M-Pesa PIN and confirm</li>
-          </ol>
-          {paybillInfo.instructions && (
-            <p className="text-xs text-muted-foreground mt-2 italic">{paybillInfo.instructions}</p>
-          )}
+            {bankInfo.instructions && (
+              <p className="text-xs text-muted-foreground mt-2 italic">{bankInfo.instructions}</p>
+            )}
+          </div>
         </div>
 
         {/* Verification Method Toggle */}
@@ -168,7 +191,7 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
                   : "bg-card text-muted-foreground hover:bg-muted"
               }`}
             >
-              Transaction Code
+              Transaction Reference
             </button>
             <button
               type="button"
@@ -179,7 +202,7 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
                   : "bg-card text-muted-foreground hover:bg-muted"
               }`}
             >
-              Upload Screenshot
+              Upload Receipt
             </button>
           </div>
         </div>
@@ -187,17 +210,17 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
         {/* Transaction Code Input */}
         {verificationType === "transaction_code" && (
           <div className="space-y-2">
-            <Label htmlFor="txCode">M-Pesa Transaction Code</Label>
+            <Label htmlFor="txRef">Bank Transaction Reference</Label>
             <Input
-              id="txCode"
+              id="txRef"
               value={transactionCode}
               onChange={(e) => setTransactionCode(e.target.value.toUpperCase())}
-              placeholder="e.g. SLK4H7R2T9"
+              placeholder="e.g. REF123456789"
               className="uppercase tracking-wider font-mono text-lg"
-              maxLength={20}
+              maxLength={30}
             />
             <p className="text-xs text-muted-foreground">
-              You'll receive this code via SMS after completing the M-Pesa payment
+              Enter the reference number from your bank transfer confirmation
             </p>
           </div>
         )}
@@ -205,7 +228,7 @@ const ManualPaymentForm = ({ donationId, amount, currency, onComplete, onBack }:
         {/* Screenshot Upload */}
         {verificationType === "screenshot" && (
           <div className="space-y-2">
-            <Label>Payment Screenshot</Label>
+            <Label>Bank Transfer Receipt</Label>
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-6 cursor-pointer hover:border-primary/50 transition-colors">
               {screenshotFile ? (
                 <div className="text-center">
